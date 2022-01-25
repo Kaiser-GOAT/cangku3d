@@ -1,33 +1,25 @@
 import React from 'react'
-import { Button, Form } from 'antd'
+import { Button } from 'antd'
 import 'antd/dist/antd.css'
 import * as THREE from 'three'
 import { useCallback, useEffect, useState } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { DragControls } from 'three/examples/jsm/controls/DragControls'
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import pic from './image/pic.jpg'
 import { Huojia } from './components/Huojia'
 import { Rain } from './components/Rain'
 import AddGoods from './components/AddGoods'
-import ProForm from '@ant-design/pro-form'
+import ProForm, { ModalForm, ProFormText } from '@ant-design/pro-form'
 const App: React.FC = () => {
   // const scene = new THREE.Scene()
-  const scene = new THREE.Scene()
+  const [scene, setScene] = useState(new THREE.Scene())
   const rain = Rain(scene)
   const renderer = new THREE.WebGLRenderer()
   const [position, setPosition] = useState<{ x: number; y: number }>()
-  const [shelfVisible, setShelfVisible] = useState<boolean>(false)
-  const [coordinateSwitch, setCoordinateSwitch] = useState<boolean>(false)
-  const [coordinate, setCoordinate] = useState<{ x: number; z: number }>()
-
   const [information, setInformation] = useState<any>()
-
   const ref = useCallback((node) => {
     function init() {
       //初始化场景对象scene
       let a: any
-      let objectNode: any = []
       const width = window.innerWidth
       const height = window.innerHeight
       const k = width / height
@@ -42,80 +34,9 @@ const App: React.FC = () => {
       let huojia = Huojia(300, 200, 50, 4)
       scene.add(huojia)
       huojia.name = `1号货架`
-        huojia.castShadow = true
+      huojia.castShadow = true
       /* 创建货架**/
 
-      // function createShelf(
-      //   x: number,
-      //   y: number,
-      //   z: number,
-      //   line: number,
-      //   identifier: number
-      // ) {
-      //   let huojia = Huojia(x, y, z, line)
-      //   huojia.name = `${identifier}号货架`
-      //   huojia.castShadow = true
-      //   let geometry = new THREE.BoxGeometry(x, y, z)
-      //   let material = new THREE.MeshBasicMaterial({
-      //     color: 0xfff,
-      //     transparent: true,
-      //     opacity: 0.1,
-      //   })
-      //   let outerMesh = new THREE.Mesh(geometry, material)
-      //   outerMesh.position.x = huojia.position.x               
-      //   outerMesh.position.y = huojia.position.y 
-      //   outerMesh.position.z = huojia.position.z
-      //   outerMesh.rotation.x = huojia.position.x
-      //   outerMesh.rotation.y = huojia.position.y
-      //   outerMesh.rotation.z = huojia.position.z
-      //   outerMesh.name = `outer${identifier}`
-      //   console.log(huojia)
-      //   console.log(outerMesh)
-
-      //   objectNode.push(outerMesh)
-      //   scene.add(huojia, outerMesh)
-      //   initDragControls(huojia)
-      // }
-      // createShelf(200, 100, 50, 4, 1)
-      // function initDragControls(group: any) {
-      //   // 添加平移控件
-      //   // 初始化拖拽控件
-
-      //   var dragControls = new DragControls(
-      //     objectNode,
-      //     camera,
-      //     renderer.domElement
-      //   )
-      //   var transformControls = new TransformControls(
-      //     camera,
-      //     renderer.domElement
-      //   )
-      //   scene.add(transformControls)
-      //   // 鼠标略过事件
-      //   dragControls.addEventListener('hoveron', function (event) {
-      //     // 让变换控件对象和选中的对象绑定
-      //     transformControls.attach(event.object)
-      //   })
-      //   // 开始拖拽
-      //   dragControls.addEventListener('dragstart', function (event) {
-      //     controls.enabled = false
-      //   })
-      //   // 拖拽过程
-      //   dragControls.addEventListener('drag', function (event) {
-      //     var name = event.object.name // event.object即为外部模型，在这里可以通过外层模型的name属性找到内部模型
-      //     var x = event.object.position.x
-      //     var y = event.object.position.y
-      //     var z = event.object.position.z
-      //     group.position.set(x,y,z)
-      //     // group.position.x = x // 给内部模型位置赋值
-      //     // group.position.y = y
-      //     // group.position.z = z
-      //   })
-      //   // 拖拽结束
-      //   dragControls.addEventListener('dragend', function (event) {
-      //     controls.enabled = true
-      //   })
-      // }
       let planeGeometry = new THREE.PlaneGeometry(2000, 2000)
       textureLoader.load(pic, function (texture: any) {
         let planeMaterial = new THREE.MeshLambertMaterial({
@@ -128,7 +49,6 @@ const App: React.FC = () => {
         plane.name = '地板'
         scene.add(plane)
       })
-      // huojia.add(WoodBox())
       //添加点光源
       let spotLight = new THREE.SpotLight(0xffffff)
       spotLight.position.set(-400, 400, -150)
@@ -164,16 +84,42 @@ const App: React.FC = () => {
       document.getElementsByTagName('canvas')[0].id = 'container'
       let SELECTED: any
       let record: any
+      function onMouseMove(e: MouseEvent) {
+        e.preventDefault()
+        let vector = new THREE.Vector3()
+        vector.set(
+          (e.clientX / window.innerWidth) * 2 - 1,
+          -(e.clientY / window.innerHeight) * 2 + 1,
+          0.5
+        )
+        // vector.unproject( camera );
+        let raycaster1 = new THREE.Raycaster()
+        raycaster1.setFromCamera(vector, camera)
+
+        let intersects1 = raycaster1.intersectObjects(scene.children)
+
+        if (intersects1.length > 0) {
+          let selected = intersects1[0] //取第一个物体
+          setTimeout(() => {
+            SELECTED.parent.position.x = selected.point.x
+            SELECTED.parent.position.z = selected.point.z
+          }, 100)
+
+        }
+      }
       function getIntersects(event: any) {
         event.preventDefault()
         // 声明 raycaster 和 mouse 变量
         let raycaster = new THREE.Raycaster()
         let mouse = new THREE.Vector2()
+        let vector = new THREE.Vector3()
         // 通过鼠标点击位置,计算出 raycaster 所需点的位置,以屏幕为中心点,范围 -1 到 1
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
         //通过鼠标点击的位置(二维坐标)和当前相机的矩阵计算出射线位置
         raycaster.setFromCamera(mouse, camera)
+        vector.set(mouse.x, mouse.y, 0.5)
+        vector.unproject(camera)
 
         // 获取与射线相交的对象数组，其中的元素按照距离排序，越近的越靠前
         const intersects = raycaster.intersectObjects(scene.children)
@@ -202,9 +148,45 @@ const App: React.FC = () => {
           if (SELECTED) SELECTED.material.color.set(SELECTED.currentHex) //恢复选择前的默认颜色
           SELECTED = null
         }
+        document.addEventListener('keydown', function (e) {
+          let n = 2
+          if (/货架/.test(SELECTED.parent.name)) {
+            switch (e.key) {
+              case 'ArrowRight':
+                SELECTED.parent.position.x += n
+                break
+              case 'ArrowLeft':
+                SELECTED.parent.position.x -= n
+                break
+              case 'ArrowUp':
+                SELECTED.parent.position.z -= n
+                break
+              case 'ArrowDown':
+                SELECTED.parent.position.z += n
+                break
+              default:
+                break
+            }
+          }
+        })
         //返回选中的对象
         return intersects
       }
+
+      document
+        .getElementById('container')
+        ?.addEventListener('mousedown', function (e) {
+          if (SELECTED && /板子/.test(SELECTED.name)) {
+            document.onmousemove = onMouseMove
+            controls.enabled = false
+          }
+        })
+      document
+        .getElementById('container')
+        ?.addEventListener('mouseup', function (e) {
+          document.onmousemove = null
+          controls.enabled = true
+        })
 
       document.getElementById('container')?.addEventListener('click', (e) => {
         let lastRecord
@@ -222,6 +204,7 @@ const App: React.FC = () => {
         'webglcontextlost',
         function (event) {
           event.preventDefault()
+
           cancelAnimationFrame(a)
           // animationID would have been set by your call to requestAnimationFrame
         },
@@ -248,85 +231,50 @@ const App: React.FC = () => {
   useEffect(() => {
     console.log('information :>> ', information)
   })
-  useEffect(() => {
-    console.log(coordinate)
-  }, [coordinate])
-  useEffect(() => {
-    if (coordinateSwitch) {
-    }
-  }, [coordinateSwitch])
 
   return (
     <div style={{ position: 'relative' }} ref={ref} id="pos">
-      <div style={{ position: 'absolute', margin: 10 }}>
-        <Button
-          onClick={() => {
-            setShelfVisible(true)
-          }}
-          type="primary"
-        >
-          新增货架
-        </Button>
-        <div
-          style={{
-            width: 200,
-            height: 250,
-            marginTop: 10,
-            backgroundColor: '#fff',
-            border: '1px solid #1890ff',
-            display: shelfVisible ? 'block' : 'none',
-          }}
-        >
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
-              padding: 5,
-            }}
+      <ModalForm<{
+        x: number
+        y: number
+        z: number
+        line: number
+        shelfName: number | string
+      }>
+        title="新建货架"
+        trigger={
+          <Button
+            style={{ position: 'absolute', margin: 10 }}
+            type="primary"
           >
-            <ProForm<{
-              name: string
-              coordinate: { x: number; y: number; z: number }
-            }>
-              style={{ width: '100%' }}
-              onFinish={async (values) => {
-                console.log(values)
-              }}
-            >
-              <Form.Item name={'coordinate'}>
-                <Button
-                  onClick={() => {
-                    setCoordinateSwitch(true)
-                  }}
-                >
-                  获取坐标
-                </Button>
-              </Form.Item>
-            </ProForm>
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                marginBottom: 5,
-                width: '70%',
-                display: 'flex',
-                justifyContent: 'space-around',
-              }}
-            >
-              <Button type="primary">确认</Button>
-              <Button
-                onClick={() => {
-                  setShelfVisible(false)
-                }}
-              >
-                关闭
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+            新增货架
+          </Button>
+        }
+        modalProps={{
+          destroyOnClose: true,
+        }}
+        onFinish={async (values) => {
+          let huojia = Huojia(values.x, values.y, values.z, values.line)
+          huojia.name = `${values.shelfName}货架`
+          setScene(scene.add(huojia))
+          return true
+        }}
+      >
+        <ProFormText
+          width="md"
+          name="shelfName"
+          label={'货架编号'}
+          tooltip="唯一标识符,货架名不可重复"
+          placeholder={'唯一标识符,货架名不可重复'}
+        />
+        <ProForm.Group>
+          <ProFormText width={'xs'} name="x" label={'长度'} />
+          <ProFormText width={'xs'} name="y" label={'高度'} />
+          <ProFormText width={'xs'} name="z" label={'宽度'} />
+          <ProFormText width={'xs'} name="line" label={'层级'} />
+        </ProForm.Group>
+      </ModalForm>
+
       <div style={{ display: position ? 'block' : 'none' }}>
         <div
           style={{
