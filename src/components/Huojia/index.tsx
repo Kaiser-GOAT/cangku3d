@@ -20,7 +20,7 @@ const banziCreater = (x: number,z: number)=>{
 	// let banzi = new THREE.Mesh(banziGeometry,banziMaterial)
 	
 }
-export const Huojia = (x: number,y: number,z: number,line: number)=>{
+export const TiePiHuoJia = (x: number,y: number,z: number,line: number)=>{
 	const huojiaGroup = new THREE.Group()
 	huojiaGroup.name = '货架'
 	huojiaGroup.castShadow = true	

@@ -24,7 +24,6 @@ const AddGoods: React.FC<{ info: any }> = ({ info }) => {
         let position = initialPosition + (30 + 20 + space) * index
         hash.push(position)
       }
-      console.log(hash)
       setGoodsHash(hash)
     }
   }, [info])

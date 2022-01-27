@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { useCallback, useEffect, useState } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import pic from './image/pic.jpg'
-import { Huojia } from './components/Huojia'
+import { TiePiHuoJia } from './components/Huojia'
 import { Rain } from './components/Rain'
 import AddGoods from './components/AddGoods'
 import ProForm, { ModalForm, ProFormText } from '@ant-design/pro-form'
@@ -25,22 +25,22 @@ const App: React.FC = () => {
       const k = width / height
       let textureLoader = new THREE.TextureLoader()
       const camera = new THREE.PerspectiveCamera(45, k, 1, 10000)
-      //创建相机
-      camera.position.set(822, 759, 968) //设置相机位置
-      camera.lookAt(scene.position) //设置相机方向
-      renderer.setSize(width, height) //设置渲染区域大小
-      renderer.setClearColor(0xb9d3f1, 1) //设置背景颜色
-      renderer.shadowMap.enabled = true
-      let huojia = Huojia(300, 200, 50, 4)
+      let huojia = TiePiHuoJia(300, 200, 50, 4)
       scene.add(huojia)
       huojia.name = `1号货架`
       huojia.castShadow = true
-      /* 创建货架**/
+      //创建相机
+      camera.position.set(822, 759, 968) //设置相机位置
+      camera.lookAt(new THREE.Vector3(-1000, 50, 80)) //设置相机方向
+      renderer.setSize(width, height) //设置渲染区域大小
+      renderer.setClearColor(0xb9d3f1, 1) //设置背景颜色
+      renderer.shadowMap.enabled = true
 
       let planeGeometry = new THREE.PlaneGeometry(2000, 2000)
       textureLoader.load(pic, function (texture: any) {
         let planeMaterial = new THREE.MeshLambertMaterial({
           map: texture,
+          side: THREE.DoubleSide,
         })
         let plane = new THREE.Mesh(planeGeometry, planeMaterial)
         plane.rotation.x = -0.5 * Math.PI
@@ -53,14 +53,14 @@ const App: React.FC = () => {
       let spotLight = new THREE.SpotLight(0xffffff)
       spotLight.position.set(-400, 400, -150)
       spotLight.castShadow = true
-      spotLight.shadow.mapSize = new THREE.Vector2(1024, 1024)
-      spotLight.shadow.camera.far = 1300
+      spotLight.shadow.mapSize = new THREE.Vector2(2000, 2000)
+      spotLight.shadow.camera.far = 1900
       spotLight.shadow.camera.near = 400
       scene.add(spotLight)
       //辅助坐标系，参数250表示坐标系大小
-      const axesHelper = new THREE.AxesHelper(1000)
-      //添加环境光
-      scene.add(axesHelper)
+      // const axesHelper = new THREE.AxesHelper(1000)
+      // //添加环境光
+      // scene.add(axesHelper)
       let ambient = new THREE.AmbientLight(0x353535)
       scene.add(ambient)
       //创建渲染器对象
@@ -104,7 +104,6 @@ const App: React.FC = () => {
             SELECTED.parent.position.x = selected.point.x
             SELECTED.parent.position.z = selected.point.z
           }, 100)
-
         }
       }
       function getIntersects(event: any) {
@@ -173,28 +172,40 @@ const App: React.FC = () => {
         return intersects
       }
 
-      document
-        .getElementById('container')
-        ?.addEventListener('mousedown', function (e) {
-          if (SELECTED && /板子/.test(SELECTED.name)) {
-            document.onmousemove = onMouseMove
-            controls.enabled = false
-          }
-        })
-      document
-        .getElementById('container')
-        ?.addEventListener('mouseup', function (e) {
-          document.onmousemove = null
-          controls.enabled = true
-        })
-
+      // document
+      //   .getElementById('container')
+      //   ?.addEventListener('mousedown', function (e) {
+      //     if (SELECTED && /板子/.test(SELECTED.name)) {
+      //       document.onmousemove = onMouseMove
+      //       controls.enabled = false
+      //     }
+      //   })
+      // document
+      //   .getElementById('container')
+      //   ?.addEventListener('mouseup', function (e) {
+      //     document.onmousemove = null
+      //     controls.enabled = true
+      //   })
       document.getElementById('container')?.addEventListener('click', (e) => {
-        let lastRecord
         e.preventDefault()
-
         getIntersects(e)
+        let lastRecord
+        console.log(controls)
+
+        if (record && /板子/.test(record.name)) {
+          console.log(record)
+
+          controls.target = record.position
+          camera.fov = 10
+        } else if (!record) {
+          camera.fov = 45
+          controls.target = new THREE.Vector3(0, 0, 0)
+        }
+        controls.update()
+        camera.updateProjectionMatrix()
         if (record !== lastRecord && record) {
           record = lastRecord
+
           setPosition({ x: e.clientX, y: e.clientY })
         } else {
           setPosition(undefined)
@@ -243,10 +254,7 @@ const App: React.FC = () => {
       }>
         title="新建货架"
         trigger={
-          <Button
-            style={{ position: 'absolute', margin: 10 }}
-            type="primary"
-          >
+          <Button style={{ position: 'absolute', margin: 10 }} type="primary">
             新增货架
           </Button>
         }
@@ -254,7 +262,7 @@ const App: React.FC = () => {
           destroyOnClose: true,
         }}
         onFinish={async (values) => {
-          let huojia = Huojia(values.x, values.y, values.z, values.line)
+          let huojia = TiePiHuoJia(values.x, values.y, values.z, values.line)
           huojia.name = `${values.shelfName}货架`
           setScene(scene.add(huojia))
           return true
@@ -274,14 +282,15 @@ const App: React.FC = () => {
           <ProFormText width={'xs'} name="line" label={'层级'} />
         </ProForm.Group>
       </ModalForm>
-
-      <div style={{ display: position ? 'block' : 'none' }}>
+      <div style={{ position: 'absolute' }}></div>
+      <div
+        style={{ display: position ? 'block' : 'none', position: 'absolute' }}
+      >
         <div
           style={{
             width: 125,
             height: 125,
             background: '#fff',
-            position: 'absolute',
             transform: `translate(${position?.x}px,${position?.y}px)`,
             margin: 5,
             display: 'flex',
@@ -333,6 +342,20 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          width: 300,
+          padding: 10,
+          right:0,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#fff',
+        }}
+      >
+        <h1 style={{width:'100%',textAlign:'center'}}>货架信息</h1>
+        
       </div>
     </div>
   )
