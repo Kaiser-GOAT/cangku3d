@@ -1,10 +1,11 @@
 import React from 'react'
-import { Button } from 'antd'
+import { Button, Input, InputNumber, Popconfirm, Space } from 'antd'
 import 'antd/dist/antd.css'
 import * as THREE from 'three'
 import { useCallback, useEffect, useState } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import pic from './image/pic.jpg'
+import pic from './image/pic.png'
+import taoci from './image/taoci.png'
 import { TiePiHuoJia } from './components/Huojia'
 import { Rain } from './components/Rain'
 import AddGoods from './components/AddGoods'
@@ -16,6 +17,22 @@ const App: React.FC = () => {
   const renderer = new THREE.WebGLRenderer()
   const [position, setPosition] = useState<{ x: number; y: number }>()
   const [information, setInformation] = useState<any>()
+  const [shelfInformation, setShelfInformation] = useState<any>()
+  const [rotateValue, setRotateValue] = useState<number>(0)
+  useEffect(() => {
+    if (information) {
+      if (/货架/.test(information.parent.name)) {
+        setShelfInformation(information.parent)
+      } else if (/货架/.test(information.parent.parent.name)) {
+        setShelfInformation(information.parent)
+      }
+    } else {
+      setShelfInformation(undefined)
+    }
+  }, [information])
+  useEffect(() => {
+    console.log(information)
+  }, [information])
   const ref = useCallback((node) => {
     function init() {
       //初始化场景对象scene
@@ -33,13 +50,18 @@ const App: React.FC = () => {
       camera.position.set(822, 759, 968) //设置相机位置
       camera.lookAt(new THREE.Vector3(-1000, 50, 80)) //设置相机方向
       renderer.setSize(width, height) //设置渲染区域大小
-      renderer.setClearColor(0xb9d3f1, 1) //设置背景颜色
+      renderer.setClearColor('#222222', 1) //设置背景颜色
       renderer.shadowMap.enabled = true
 
       let planeGeometry = new THREE.PlaneGeometry(2000, 2000)
-      textureLoader.load(pic, function (texture: any) {
+      textureLoader.load(taoci, function (texture: any) {
+        // texture.wrapS = THREE.RepeatWrapping
+        // texture.wrapT = THREE.RepeatWrapping
+        // texture.repeat.set(5, 5)
         let planeMaterial = new THREE.MeshLambertMaterial({
           map: texture,
+          // color:0x66ff00,
+          // color:'#c8d2d7',
           side: THREE.DoubleSide,
         })
         let plane = new THREE.Mesh(planeGeometry, planeMaterial)
@@ -51,9 +73,9 @@ const App: React.FC = () => {
       })
       //添加点光源
       let spotLight = new THREE.SpotLight(0xffffff)
-      spotLight.position.set(-400, 400, -150)
+      spotLight.position.set(800, 800, 350)
       spotLight.castShadow = true
-      spotLight.shadow.mapSize = new THREE.Vector2(2000, 2000)
+      spotLight.shadow.mapSize = new THREE.Vector2(1000, 1000)
       spotLight.shadow.camera.far = 1900
       spotLight.shadow.camera.near = 400
       scene.add(spotLight)
@@ -140,6 +162,7 @@ const App: React.FC = () => {
               SELECTED.material.color.set(0x66ff00)
             } else {
               record = null
+              setInformation(undefined)
             }
           }
         } else {
@@ -190,11 +213,7 @@ const App: React.FC = () => {
         e.preventDefault()
         getIntersects(e)
         let lastRecord
-        console.log(controls)
-
         if (record && /板子/.test(record.name)) {
-          console.log(record)
-
           controls.target = record.position
           camera.fov = 10
         } else if (!record) {
@@ -215,7 +234,6 @@ const App: React.FC = () => {
         'webglcontextlost',
         function (event) {
           event.preventDefault()
-
           cancelAnimationFrame(a)
           // animationID would have been set by your call to requestAnimationFrame
         },
@@ -228,8 +246,7 @@ const App: React.FC = () => {
           setTimeout(() => {
             document.getElementsByTagName('canvas')[0].remove()
             renderer.forceContextRestore()
-            renderer.setClearColor(0xb9d3f1, 1) //设置背景颜色
-
+            renderer.setClearColor('#222222', 1) //设置背景颜色
             node.appendChild(renderer.getContext().canvas)
           }, 0)
           // animationID would have been set by your call to requestAnimationFrame
@@ -239,9 +256,6 @@ const App: React.FC = () => {
     }
     init()
   }, [])
-  useEffect(() => {
-    console.log('information :>> ', information)
-  })
 
   return (
     <div style={{ position: 'relative' }} ref={ref} id="pos">
@@ -343,19 +357,71 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
-      <div
-        style={{
-          position: 'absolute',
-          width: 300,
-          padding: 10,
-          right:0,
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#fff',
-        }}
-      >
-        <h1 style={{width:'100%',textAlign:'center'}}>货架信息</h1>
-        
+      <div style={{ position: 'absolute', color: '#fff', right: 0,display:shelfInformation?'block':'none' }}>
+        <div
+          style={{
+            width: 250,
+            padding: 10,           
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#091221',
+            border: '2px solid #fff',
+            margin: 10,
+            lineHeight: 2,
+          }}
+        >
+          <h1 style={{ width: '100%', textAlign: 'center', color: '#fff' }}>
+            货架信息
+          </h1>
+          <div>货架名：{shelfInformation?.name}</div>
+          <div
+            style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span>长度：{shelfInformation?.userData.matrix.x}</span>
+            <span>宽度：{shelfInformation?.userData.matrix.z}</span>
+            <span>高度：{shelfInformation?.userData.matrix.y}</span>
+          </div>
+          <div
+            style={{
+              width: '100%',
+              display: 'flex',
+              whiteSpace: 'nowrap',
+              alignItems: 'center',
+            }}
+          >
+            <div>旋转：</div>
+            <Space>
+              <InputNumber value={rotateValue} onChange={setRotateValue} />
+              <Button
+                type="primary"
+                onClick={() => {
+                  if (shelfInformation) {
+                    shelfInformation.rotateY(rotateValue / 100)
+                  }
+                }}
+              >
+                确认
+              </Button>
+            </Space>
+          </div>
+          <div style={{ textAlign: 'center', margin: '10px 0' }}>
+            <Popconfirm
+              title="确认删除吗"
+              okText="确认"
+              cancelText="取消"
+              onConfirm={() => {
+                const newScene = scene.remove(shelfInformation)
+                setScene(newScene)
+              }}
+            >
+              <Button type="primary">删除货架</Button>
+            </Popconfirm>
+          </div>
+        </div>
       </div>
     </div>
   )

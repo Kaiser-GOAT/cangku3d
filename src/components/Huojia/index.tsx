@@ -49,7 +49,7 @@ export const TiePiHuoJia = (x: number,y: number,z: number,line: number)=>{
 		initialHeight = afterHeight		
 		banzi.push( mesh)
 	}
-
+	huojiaGroup.userData.matrix = {x,y,z,line}
 	huojiaGroup.add(...banzi,ganzi1No1,ganzi1No2,ganzi1No3,ganzi1No4)
 	
 	return huojiaGroup
