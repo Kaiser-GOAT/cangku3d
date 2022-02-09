@@ -1,10 +1,8 @@
 import { Button, message, Modal } from 'antd'
 import { useEffect, useState } from 'react'
 import { WoodBox } from './Goods'
-import ProForm, {
+import  {
   ModalForm,
-  ProFormText,
-  ProFormDateRangePicker,
   ProFormSelect,
 } from '@ant-design/pro-form'
 
@@ -38,7 +36,6 @@ const AddGoods: React.FC<{ info: any }> = ({ info }) => {
         autoFocusFirstInput
         modalProps={{
           destroyOnClose: true,
-          onCancel: () => console.log('run'),
         }}
         onFinish={async (values) => {
           let bool = true

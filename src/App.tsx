@@ -4,12 +4,15 @@ import 'antd/dist/antd.css'
 import * as THREE from 'three'
 import { useCallback, useEffect, useState } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import pic from './image/pic.png'
 import taoci from './image/taoci.png'
 import { TiePiHuoJia } from './components/Huojia'
 import { Rain } from './components/Rain'
 import AddGoods from './components/AddGoods'
 import ProForm, { ModalForm, ProFormText } from '@ant-design/pro-form'
+import AddPlane from './components/AddPlane'
+import DeletePlane from './components/DeletePlane'
+import Handset from './components/Handset'
+
 const App: React.FC = () => {
   // const scene = new THREE.Scene()
   const [scene, setScene] = useState(new THREE.Scene())
@@ -19,20 +22,21 @@ const App: React.FC = () => {
   const [information, setInformation] = useState<any>()
   const [shelfInformation, setShelfInformation] = useState<any>()
   const [rotateValue, setRotateValue] = useState<number>(0)
+  const [addPlaneVisible, setAddPlaneVisible] = useState<boolean>(false)
   useEffect(() => {
     if (information) {
-      if (/货架/.test(information.parent.name)) {
-        setShelfInformation(information.parent)
-      } else if (/货架/.test(information.parent.parent.name)) {
+      if (
+        /货架/.test(
+          information.parent.name || /货架/.test(information.parent.parent.name)
+        )
+      ) {
         setShelfInformation(information.parent)
       }
     } else {
       setShelfInformation(undefined)
     }
   }, [information])
-  useEffect(() => {
-    console.log(information)
-  }, [information])
+
   const ref = useCallback((node) => {
     function init() {
       //初始化场景对象scene
@@ -47,7 +51,7 @@ const App: React.FC = () => {
       huojia.name = `1号货架`
       huojia.castShadow = true
       //创建相机
-      camera.position.set(822, 759, 968) //设置相机位置
+      camera.position.set(1200, 1200, 1200) //设置相机位置
       camera.lookAt(new THREE.Vector3(-1000, 50, 80)) //设置相机方向
       renderer.setSize(width, height) //设置渲染区域大小
       renderer.setClearColor('#222222', 1) //设置背景颜色
@@ -68,7 +72,7 @@ const App: React.FC = () => {
         plane.rotation.x = -0.5 * Math.PI
         plane.position.set(0, 0, 0)
         plane.receiveShadow = true
-        plane.name = '地板'
+        plane.name = '初始plane'
         scene.add(plane)
       })
       //添加点光源
@@ -87,7 +91,8 @@ const App: React.FC = () => {
       scene.add(ambient)
       //创建渲染器对象
       scene.add(rain)
-
+      console.log(scene);
+      
       node.appendChild(renderer.domElement)
       function render() {
         rain.children.forEach((sprite) => {
@@ -105,6 +110,7 @@ const App: React.FC = () => {
       let controls = new OrbitControls(camera, renderer.domElement)
       document.getElementsByTagName('canvas')[0].id = 'container'
       let SELECTED: any
+      let PLANE: any
       let record: any
       function onMouseMove(e: MouseEvent) {
         e.preventDefault()
@@ -154,6 +160,12 @@ const App: React.FC = () => {
             SELECTED = intersects[0].object
             SELECTED.currentHex = SELECTED.material.color.getHex() //记录当前选择的颜色
             //改变物体的颜色(红色)
+            for (let index = 0; index < intersects.length; index++) {
+              if(/地板/.test(intersects[index].object.name)){
+                PLANE = intersects[index].object
+              }             
+            }
+            
             if (/(货物)|(板子)/.test(SELECTED.name)) {
               if (record !== SELECTED) {
                 record = SELECTED
@@ -169,10 +181,12 @@ const App: React.FC = () => {
           document.body.style.cursor = 'auto'
           if (SELECTED) SELECTED.material.color.set(SELECTED.currentHex) //恢复选择前的默认颜色
           SELECTED = null
+          PLANE = null
         }
         document.addEventListener('keydown', function (e) {
-          let n = 2
-          if (/货架/.test(SELECTED.parent.name)) {
+          let n = 1
+          let m = 10
+          if (/货架/.test(SELECTED?.parent.name) ) {
             switch (e.key) {
               case 'ArrowRight':
                 SELECTED.parent.position.x += n
@@ -185,6 +199,24 @@ const App: React.FC = () => {
                 break
               case 'ArrowDown':
                 SELECTED.parent.position.z += n
+                break
+              default:
+                break
+            }
+          }
+          if (/地板/.test(PLANE?.name) ) {
+            switch (e.key) {
+              case 'ArrowRight':
+                PLANE.position.x += m
+                break
+              case 'ArrowLeft':
+                PLANE.position.x -= m
+                break
+              case 'ArrowUp':
+                PLANE.position.z -= m
+                break
+              case 'ArrowDown':
+                PLANE.position.z += m
                 break
               default:
                 break
@@ -214,7 +246,7 @@ const App: React.FC = () => {
         getIntersects(e)
         let lastRecord
         if (record && /板子/.test(record.name)) {
-          controls.target = record.position
+          // controls.target = record.position
           camera.fov = 10
         } else if (!record) {
           camera.fov = 45
@@ -230,6 +262,9 @@ const App: React.FC = () => {
           setPosition(undefined)
         }
       })
+      /**
+       * 监听了webgl的上下文丢失事件 并做了处理；这段代码不要更改
+       */
       renderer.domElement.addEventListener(
         'webglcontextlost',
         function (event) {
@@ -296,7 +331,27 @@ const App: React.FC = () => {
           <ProFormText width={'xs'} name="line" label={'层级'} />
         </ProForm.Group>
       </ModalForm>
-      <div style={{ position: 'absolute' }}></div>
+      <div
+        style={{
+          position: 'absolute',
+          margin: 10,
+          transform: `translateY(${60}px)`,
+          display: 'flex',
+        }}
+      >
+        <Button
+          type="primary"
+          onClick={() => {
+            setAddPlaneVisible(!addPlaneVisible)
+          }}
+        >
+          新增地板
+        </Button>
+        <div style={{ marginLeft: 10, transform: `translateY(${-60}px)` }}>
+          <AddPlane visible={addPlaneVisible} scene={scene} />
+        </div>
+      </div>
+      <DeletePlane scene={scene}/>
       <div
         style={{ display: position ? 'block' : 'none', position: 'absolute' }}
       >
@@ -357,11 +412,18 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
-      <div style={{ position: 'absolute', color: '#fff', right: 0,display:shelfInformation?'block':'none' }}>
+      <div
+        style={{
+          position: 'absolute',
+          color: '#fff',
+          right: 0,
+          display: shelfInformation ? 'block' : 'none',
+        }}
+      >
         <div
           style={{
             width: 250,
-            padding: 10,           
+            padding: 10,
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#091221',
@@ -423,6 +485,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
+        <Handset />
     </div>
   )
 }
