@@ -1,0 +1,55 @@
+.wrapper {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+.wrapper .handset {
+  position: relative;
+  border-radius: 50%;
+  width: 300px;
+  height: 300px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.4) 100%, rgba(255, 255, 255, 0.2) 80%);
+  margin: 20px;
+  z-index: 10;
+}
+.wrapper .handset .row {
+  font-size: 94.87px;
+  color: rgba(255, 255, 255, 0.6);
+  position: absolute;
+}
+.wrapper .handset .row :active {
+  color: #fff;
+}
+.wrapper .handset .down {
+  bottom: 0;
+  left: 50%;
+  margin-left: -49px;
+  transform: translateY(-7.7px);
+}
+.wrapper .handset .up {
+  top: 0;
+  left: 50%;
+  margin-left: -49px;
+  transform: translateY(7.7px);
+}
+.wrapper .handset .left {
+  top: 50%;
+  left: 0;
+  margin-top: -49px;
+  transform: translateX(7.7px);
+}
+.wrapper .handset .right {
+  top: 50%;
+  right: 0;
+  margin-top: -49px;
+  transform: translateX(-7.7px);
+}
+.wrapper .handset .circle {
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  top: 40%;
+  left: 40%;
+  background-color: rgba(255, 255, 255, 0.6);
+  position: absolute;
+}

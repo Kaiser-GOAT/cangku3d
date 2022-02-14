@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { useCallback, useEffect, useState } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import taoci from './image/taoci.png'
-import { TiePiHuoJia } from './components/Huojia'
+import { TiePiHuoJia, CabinetDoorShelf } from './components/Huojia'
 import { Rain } from './components/Rain'
 import AddGoods from './components/AddGoods'
 import ProForm, { ModalForm, ProFormText } from '@ant-design/pro-form'
@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const [shelfInformation, setShelfInformation] = useState<any>()
   const [rotateValue, setRotateValue] = useState<number>(0)
   const [addPlaneVisible, setAddPlaneVisible] = useState<boolean>(false)
+  let n = 1
+  let m = 10
   useEffect(() => {
     if (information) {
       if (
@@ -50,6 +52,9 @@ const App: React.FC = () => {
       scene.add(huojia)
       huojia.name = `1号货架`
       huojia.castShadow = true
+      // let huojia2 = CabinetDoorShelf(500, 300, 70, 4)
+      // huojia2.name = `2号货架`
+      // scene.add(huojia2)
       //创建相机
       camera.position.set(1200, 1200, 1200) //设置相机位置
       camera.lookAt(new THREE.Vector3(-1000, 50, 80)) //设置相机方向
@@ -85,14 +90,12 @@ const App: React.FC = () => {
       scene.add(spotLight)
       //辅助坐标系，参数250表示坐标系大小
       // const axesHelper = new THREE.AxesHelper(1000)
-      // //添加环境光
       // scene.add(axesHelper)
+      //添加环境光
       let ambient = new THREE.AmbientLight(0x353535)
       scene.add(ambient)
       //创建渲染器对象
       scene.add(rain)
-      console.log(scene);
-      
       node.appendChild(renderer.domElement)
       function render() {
         rain.children.forEach((sprite) => {
@@ -111,6 +114,7 @@ const App: React.FC = () => {
       document.getElementsByTagName('canvas')[0].id = 'container'
       let SELECTED: any
       let PLANE: any
+      let DOOR: any
       let record: any
       function onMouseMove(e: MouseEvent) {
         e.preventDefault()
@@ -150,9 +154,9 @@ const App: React.FC = () => {
 
         // 获取与射线相交的对象数组，其中的元素按照距离排序，越近的越靠前
         const intersects = raycaster.intersectObjects(scene.children)
-
         if (intersects.length > 0) {
           //获取第一个物体
+          console.log(intersects);
           if (SELECTED !== intersects[0].object) {
             //鼠标的变换
             document.body.style.cursor = 'pointer'
@@ -161,11 +165,13 @@ const App: React.FC = () => {
             SELECTED.currentHex = SELECTED.material.color.getHex() //记录当前选择的颜色
             //改变物体的颜色(红色)
             for (let index = 0; index < intersects.length; index++) {
-              if(/地板/.test(intersects[index].object.name)){
+              if (/地板/.test(intersects[index].object.name)) {
                 PLANE = intersects[index].object
-              }             
+              }
             }
-            
+            if(/门/.test(SELECTED.parent.name)){
+              DOOR = SELECTED.parent
+            }
             if (/(货物)|(板子)/.test(SELECTED.name)) {
               if (record !== SELECTED) {
                 record = SELECTED
@@ -182,11 +188,38 @@ const App: React.FC = () => {
           if (SELECTED) SELECTED.material.color.set(SELECTED.currentHex) //恢复选择前的默认颜色
           SELECTED = null
           PLANE = null
+          DOOR = null
         }
+        console.log(DOOR);
+        function doorOpenRender() {
+          if(DOOR){
+            
+            renderer.render(scene,camera);
+            if(/左门/.test(DOOR.name)){
+              if(DOOR.rotation._y < 1.3){
+                DOOR.rotateY(0.1)
+              }else if(DOOR.rotation._y >= 1.3){
+             DOOR.rotateY(-0.1)
+              }
+              if(DOOR.rotation._y === 1.3){
+                cancelAnimationFrame(0.1)
+              }
+            }
+            if(/右门/.test(DOOR.name)){
+              if(DOOR.rotation._y > -1.3){
+                DOOR.rotation._y -= 0.1
+              }else if(DOOR.rotation._y <= -1.3){
+                DOOR.rotation._y += 0.1
+              }
+            }
+            requestAnimationFrame(doorOpenRender)
+          }
+        }
+        document.addEventListener('click',function (e) {
+         doorOpenRender()
+        })
         document.addEventListener('keydown', function (e) {
-          let n = 1
-          let m = 10
-          if (/货架/.test(SELECTED?.parent.name) ) {
+          if (/货架/.test(SELECTED?.parent.name)) {
             switch (e.key) {
               case 'ArrowRight':
                 SELECTED.parent.position.x += n
@@ -204,7 +237,7 @@ const App: React.FC = () => {
                 break
             }
           }
-          if (/地板/.test(PLANE?.name) ) {
+          if (/地板/.test(PLANE?.name)) {
             switch (e.key) {
               case 'ArrowRight':
                 PLANE.position.x += m
@@ -223,24 +256,58 @@ const App: React.FC = () => {
             }
           }
         })
+
         //返回选中的对象
         return intersects
       }
+      let rowArray = document.getElementsByClassName('row')
+      rowArray[0].addEventListener('click', function (e) {
+        if (/货架/.test(SELECTED?.parent.name)) {
+          SELECTED.parent.position.z += n
+        }
+        if (/地板/.test(PLANE?.name)) {
+          PLANE.position.z += m
+        }
+      })
+      rowArray[1].addEventListener('click', function (e) {
+        if (/货架/.test(SELECTED?.parent.name)) {
+          SELECTED.parent.position.z -= n
+        }
+        if (/地板/.test(PLANE?.name)) {
+          PLANE.position.z -= m
+        }
+      })
+      rowArray[2].addEventListener('click', function (e) {
+        if (/货架/.test(SELECTED?.parent.name)) {
+          SELECTED.parent.position.x -= n
+        }
+        if (/地板/.test(PLANE?.name)) {
+          PLANE.position.x -= m
+        }
+      })
+      rowArray[3].addEventListener('click', function (e) {
+        if (/货架/.test(SELECTED?.parent.name)) {
+          SELECTED.parent.position.x += n
+        }
+        if (/地板/.test(PLANE?.name)) {
+          PLANE.position.x += m
+        }
+      })
 
-      // document
-      //   .getElementById('container')
-      //   ?.addEventListener('mousedown', function (e) {
-      //     if (SELECTED && /板子/.test(SELECTED.name)) {
-      //       document.onmousemove = onMouseMove
-      //       controls.enabled = false
-      //     }
-      //   })
-      // document
-      //   .getElementById('container')
-      //   ?.addEventListener('mouseup', function (e) {
-      //     document.onmousemove = null
-      //     controls.enabled = true
-      //   })
+      document
+        .getElementById('container')
+        ?.addEventListener('mousedown', function (e) {
+          if (SELECTED && /板子/.test(SELECTED.name)) {
+            document.onmousemove = onMouseMove
+            controls.enabled = false
+          }
+        })
+      document
+        .getElementById('container')
+        ?.addEventListener('mouseup', function (e) {
+          document.onmousemove = null 
+          controls.enabled = true
+        })
       document.getElementById('container')?.addEventListener('click', (e) => {
         e.preventDefault()
         getIntersects(e)
@@ -351,7 +418,7 @@ const App: React.FC = () => {
           <AddPlane visible={addPlaneVisible} scene={scene} />
         </div>
       </div>
-      <DeletePlane scene={scene}/>
+      <DeletePlane scene={scene} />
       <div
         style={{ display: position ? 'block' : 'none', position: 'absolute' }}
       >
@@ -485,7 +552,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
-        <Handset />
+      <Handset />
     </div>
   )
 }

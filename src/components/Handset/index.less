@@ -1,7 +1,10 @@
 
 .wrapper{
+  position: absolute;
+  bottom: 0;
+  right:0;
   .handset {
-    position: absolute;
+    position: relative;
     border-radius: 50%;
     width: 300px;
     height: 300px;
@@ -10,9 +13,49 @@
       rgba(255, 255, 255, 0.4) 100%,
       rgba(255, 255, 255, 0.2) 80%
     );
-    bottom: 0;
-    right:0;
+
     margin: 20px;
     z-index: 10;
+  .row{
+    font-size: 94.87px;
+    color: rgba(255, 255, 255, 0.6);
+    position: absolute;
+    & :active{
+      color:#fff
+    }
+  }
+  .down{
+    bottom: 0;
+    left:50%;
+    margin-left: -49px;
+    transform: translateY(-7.7px);
+  }
+  .up{
+    top: 0;
+    left:50%;
+    margin-left: -49px;
+    transform: translateY(7.7px);
+  }
+  .left{
+    top: 50%;
+    left:0;
+    margin-top: -49px;
+    transform: translateX(7.7px);
+  }
+  .right{
+    top: 50%;
+    right:0;
+    margin-top: -49px;
+    transform: translateX(-7.7px);
+  }
+  .circle{
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    top:40%;
+    left:40%;
+    background-color: rgba(255, 255, 255, 0.6);
+    position: absolute;
+  }
   }
 }
