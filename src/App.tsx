@@ -156,7 +156,7 @@ const App: React.FC = () => {
         const intersects = raycaster.intersectObjects(scene.children)
         if (intersects.length > 0) {
           //获取第一个物体
-          console.log(intersects);
+          console.log(intersects)
           if (SELECTED !== intersects[0].object) {
             //鼠标的变换
             document.body.style.cursor = 'pointer'
@@ -169,7 +169,7 @@ const App: React.FC = () => {
                 PLANE = intersects[index].object
               }
             }
-            if(/门/.test(SELECTED.parent.name)){
+            if (/门/.test(SELECTED.parent.name)) {
               DOOR = SELECTED.parent
             }
             if (/(货物)|(板子)/.test(SELECTED.name)) {
@@ -190,33 +190,32 @@ const App: React.FC = () => {
           PLANE = null
           DOOR = null
         }
-        console.log(DOOR);
+        console.log(DOOR)
         function doorOpenRender() {
-          if(DOOR){
-            
-            renderer.render(scene,camera);
-            if(/左门/.test(DOOR.name)){
-              if(DOOR.rotation._y < 1.3){
+          if (DOOR) {
+            renderer.render(scene, camera)
+            if (/左门/.test(DOOR.name)) {
+              if (DOOR.rotation._y < 1.3) {
                 DOOR.rotateY(0.1)
-              }else if(DOOR.rotation._y >= 1.3){
-             DOOR.rotateY(-0.1)
+              } else if (DOOR.rotation._y >= 1.3) {
+                DOOR.rotateY(-0.1)
               }
-              if(DOOR.rotation._y === 1.3){
+              if (DOOR.rotation._y === 1.3) {
                 cancelAnimationFrame(0.1)
               }
             }
-            if(/右门/.test(DOOR.name)){
-              if(DOOR.rotation._y > -1.3){
+            if (/右门/.test(DOOR.name)) {
+              if (DOOR.rotation._y > -1.3) {
                 DOOR.rotation._y -= 0.1
-              }else if(DOOR.rotation._y <= -1.3){
+              } else if (DOOR.rotation._y <= -1.3) {
                 DOOR.rotation._y += 0.1
               }
             }
             requestAnimationFrame(doorOpenRender)
           }
         }
-        document.addEventListener('click',function (e) {
-         doorOpenRender()
+        document.addEventListener('click', function (e) {
+          doorOpenRender()
         })
         document.addEventListener('keydown', function (e) {
           if (/货架/.test(SELECTED?.parent.name)) {
@@ -294,20 +293,20 @@ const App: React.FC = () => {
         }
       })
 
-      document
-        .getElementById('container')
-        ?.addEventListener('mousedown', function (e) {
-          if (SELECTED && /板子/.test(SELECTED.name)) {
-            document.onmousemove = onMouseMove
-            controls.enabled = false
-          }
-        })
-      document
-        .getElementById('container')
-        ?.addEventListener('mouseup', function (e) {
-          document.onmousemove = null 
-          controls.enabled = true
-        })
+      // document
+      //   .getElementById('container')
+      //   ?.addEventListener('mousedown', function (e) {
+      //     if (SELECTED && /板子/.test(SELECTED.name)) {
+      //       document.onmousemove = onMouseMove
+      //       controls.enabled = false
+      //     }
+      //   })
+      // document
+      //   .getElementById('container')
+      //   ?.addEventListener('mouseup', function (e) {
+      //     document.onmousemove = null
+      //     controls.enabled = true
+      //   })
       document.getElementById('container')?.addEventListener('click', (e) => {
         e.preventDefault()
         getIntersects(e)
